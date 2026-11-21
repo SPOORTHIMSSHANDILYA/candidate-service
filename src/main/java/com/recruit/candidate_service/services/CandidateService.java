@@ -1,5 +1,6 @@
 package com.recruit.candidate_service.services;
 
+import com.recruit.candidate_service.constants.CandidateStatus;
 import com.recruit.candidate_service.entities.Candidate;
 import com.recruit.candidate_service.exceptions.BadRequestException;
 import com.recruit.candidate_service.exceptions.CandidateNotFoundException;
@@ -10,6 +11,7 @@ import com.recruit.candidate_service.models.CandidateRequest;
 import com.recruit.candidate_service.models.CandidateResponse;
 import com.recruit.candidate_service.models.CandidateSearchCriteria;
 import com.recruit.candidate_service.models.CandidateStatusRequest;
+import com.recruit.candidate_service.models.CandidateStats;
 import com.recruit.candidate_service.models.CandidateSummary;
 import com.recruit.candidate_service.models.PageResponse;
 import com.recruit.candidate_service.repositories.CandidateRepository;
@@ -20,6 +22,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.EnumMap;
+import java.util.Map;
 
 import static com.recruit.candidate_service.utility.CandidateHelper.normalizeEmail;
 import static com.recruit.candidate_service.utility.CandidateHelper.normalizeSkills;
@@ -132,5 +139,21 @@ public class CandidateService {
         Candidate saved = helper.saveAndFlush(candidate);
         log.info("Updated candidate status id={} version={}", saved.getId(), saved.getVersion());
         return mapper.toResponse(saved);
+    }
+
+    @Transactional(readOnly = true)
+    public CandidateStats getStats() {
+        Map<CandidateStatus, Long> countsByStatus = new EnumMap<>(CandidateStatus.class);
+        for (CandidateStatus status : CandidateStatus.values()) {
+            countsByStatus.put(status, 0L);
+        }
+        for (CandidateRepository.StatusCount count : repository.countCandidatesByStatus()) {
+            countsByStatus.put(count.getStatus(), count.getCount());
+        }
+
+        Instant now = Instant.now();
+        long addedInLast7Days = repository.countByCreatedAtBetween(
+                now.minus(7, ChronoUnit.DAYS), now);
+        return new CandidateStats(Map.copyOf(countsByStatus), addedInLast7Days);
     }
 }

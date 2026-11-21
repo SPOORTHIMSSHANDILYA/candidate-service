@@ -3,6 +3,7 @@ import com.recruit.candidate_service.models.CandidateRequest;
 import com.recruit.candidate_service.models.CandidateResponse;
 import com.recruit.candidate_service.models.CandidateSearchCriteria;
 import com.recruit.candidate_service.models.CandidateStatusRequest;
+import com.recruit.candidate_service.models.CandidateStats;
 import com.recruit.candidate_service.models.CandidateSummary;
 import com.recruit.candidate_service.models.PageResponse;
 import com.recruit.candidate_service.services.CandidateService;
@@ -83,5 +84,10 @@ public class CandidateController {
     public ResponseEntity<CandidateResponse> updateCandidateStatus(@PathVariable Long id,
                                                                     @Valid @RequestBody CandidateStatusRequest request) {
         return ResponseEntity.ok(service.changeStatus(id, request));
+    }
+
+    @GetMapping("/stats")
+    public ResponseEntity<CandidateStats> getStats() {
+        return ResponseEntity.ok(service.getStats());
     }
 }
