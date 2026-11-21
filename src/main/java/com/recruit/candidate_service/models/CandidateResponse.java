@@ -4,7 +4,6 @@ import com.recruit.candidate_service.constants.CandidateStatus;
 
 import java.time.Instant;
 import java.util.Set;
-import java.util.UUID;
 
 public record CandidateResponse(
         Long id,
