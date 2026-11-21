@@ -1,9 +1,7 @@
 package com.recruit.candidate_service.utility;
 
-import ch.qos.logback.classic.boolex.MarkerList;
 import com.recruit.candidate_service.entities.Candidate;
 import com.recruit.candidate_service.exceptions.BadRequestException;
-import com.recruit.candidate_service.exceptions.CandidateNotFoundException;
 import com.recruit.candidate_service.exceptions.DuplicateEmailException;
 import com.recruit.candidate_service.models.CandidateSearchCriteria;
 import com.recruit.candidate_service.repositories.CandidateRepository;
@@ -24,10 +22,6 @@ public class CandidateHelper {
 
     public CandidateHelper(CandidateRepository repository) {
         this.repository = repository;
-    }
-
-    private Candidate findOrThrow(UUID id) {
-        return repository.findById(id).orElseThrow(() -> new CandidateNotFoundException(id));
     }
 
     /**

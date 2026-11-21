@@ -1,10 +1,11 @@
 package com.recruit.candidate_service.models;
 
+import com.recruit.candidate_service.constants.CandidateStatus;
+
 import java.util.Set;
-import java.util.UUID;
 
 public record CandidateSummary(
-        UUID id,
+        Long id,
         String firstName,
         String lastName,
         String email,
@@ -14,6 +15,8 @@ public record CandidateSummary(
         String country,
         Integer noticePeriodDays,
         boolean openToWork,
-        Set<String> skills
+        Set<String> skills,
+        String candidateCode,
+        CandidateStatus candidateStatus
 ) {
 }

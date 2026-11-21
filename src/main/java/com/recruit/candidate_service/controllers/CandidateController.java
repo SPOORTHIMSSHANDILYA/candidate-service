@@ -34,7 +34,7 @@ public class CandidateController {
 
     //get candidate by id
     @GetMapping("/{id}")
-    public ResponseEntity<CandidateSummary> getCandidateById(@PathVariable UUID id) {
+    public ResponseEntity<CandidateSummary> getCandidateById(@PathVariable Long id) {
         return ResponseEntity.ok(service.getCandidateById(id));
     }
 
@@ -47,14 +47,14 @@ public class CandidateController {
 
     //update a candidate
     @PutMapping("/{id}")
-    public ResponseEntity<CandidateResponse> updateCandidate(@PathVariable UUID id,
+    public ResponseEntity<CandidateResponse> updateCandidate(@PathVariable Long id,
                                                              @Valid @RequestBody CandidateRequest request) {
         return ResponseEntity.ok(service.updateCandidate(id, request));
     }
 
     // DELETE candidate
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteCandidate(@PathVariable UUID id) {
+    public ResponseEntity<Void> deleteCandidate(@PathVariable Long id) {
         service.deleteCandidate(id);
         return ResponseEntity.noContent().build();
     }

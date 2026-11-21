@@ -1,16 +1,15 @@
 package com.recruit.candidate_service.entities;
 
+import com.recruit.candidate_service.constants.CandidateStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
-import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.type.SqlTypes;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.UUID;
 
 @Entity
 @Getter
@@ -18,16 +17,9 @@ import java.util.UUID;
 public class Candidate {
 
     @Id
-    @GeneratedValue
-    @UuidGenerator                                   // app generates the UUID before insert
-    @JdbcTypeCode(SqlTypes.BINARY)                   // stored as BINARY(16)
-    @Column(name = "id", columnDefinition = "BINARY(16)", updatable = false, nullable = false)
-    private UUID id;
-
-    /** Login account that owns this profile (candidate view). NULL if a recruiter created it. */
-    @JdbcTypeCode(SqlTypes.BINARY)
-    @Column(name = "user_id", columnDefinition = "BINARY(16)")
-    private UUID userId;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)   // MySQL AUTO_INCREMENT
+    @Column(name = "id", nullable = false, updatable = false)
+    private Long id;
 
     @Column(name = "first_name", nullable = false, length = 100)
     private String firstName;
@@ -64,10 +56,19 @@ public class Candidate {
     @Column(name = "open_to_work", nullable = false)
     private boolean openToWork = true;
 
-    /** User who created the record (audit). */
-    @JdbcTypeCode(SqlTypes.BINARY)
-    @Column(name = "created_by", columnDefinition = "BINARY(16)", updatable = false)
-    private UUID createdBy;
+    /** Record lifecycle: ACTIVE, INACTIVE, ARCHIVED. Stored as text. */
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR)                  // column is VARCHAR(20), not a MySQL ENUM
+    @Column(name = "candidate_status", nullable = false, length = 20)
+    private CandidateStatus candidateStatus = CandidateStatus.ACTIVE;
+
+    /** Recruiter username who created the record (audit). Set once, never changed. */
+    @Column(name = "created_by", length = 100, updatable = false)
+    private String createdBy;
+
+    /** Recruiter username who last changed the record (audit). */
+    @Column(name = "updated_by", length = 100)
+    private String updatedBy;
 
     /** Skills live in the candidate_skills table; loaded only when accessed. */
     @ElementCollection(fetch = FetchType.LAZY)
@@ -97,15 +98,17 @@ public class Candidate {
         this.email = email;
     }
 
+    // ------------------------------------------------------------ behaviour
+
+    /** Replace all skills, keeping the same collection instance (Hibernate tracks it). */
     public void replaceSkills(Set<String> newSkills) {
         this.skills.clear();
         if (newSkills != null) {
             this.skills.addAll(newSkills);
         }
     }
-    public void setUserId(UUID userId) {
-        this.userId = userId;
-    }
+
+    // ------------------------------------------------------------ setters (editable fields only)
 
     public void setFirstName(String firstName) {
         this.firstName = firstName;
@@ -127,12 +130,12 @@ public class Candidate {
         this.currentTitle = currentTitle;
     }
 
-    public void setCity(String city) {
-        this.city = city;
-    }
-
     public void setCurrentCompany(String currentCompany) {
         this.currentCompany = currentCompany;
+    }
+
+    public void setCity(String city) {
+        this.city = city;
     }
 
     public void setCountry(String country) {
@@ -151,8 +154,16 @@ public class Candidate {
         this.openToWork = openToWork;
     }
 
-    public void setCreatedBy(UUID createdBy) {
+    public void setCandidateStatus(CandidateStatus candidateStatus) {
+        this.candidateStatus = candidateStatus;
+    }
+
+    public void setCreatedBy(String createdBy) {
         this.createdBy = createdBy;
+    }
+
+    public void setUpdatedBy(String updatedBy) {
+        this.updatedBy = updatedBy;
     }
 }
 

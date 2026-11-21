@@ -51,7 +51,7 @@ public class CandidateService {
         return PageResponse.from(result);
     }
 
-    public CandidateSummary getCandidateById(UUID id) {
+    public CandidateSummary getCandidateById(Long id) {
         Candidate canddidate = repository.findById(id).orElseThrow(() -> new RuntimeException("Candidate not found"));
         return mapper.toSummary(canddidate);
     }
@@ -72,7 +72,7 @@ public class CandidateService {
     }
 
     @Transactional
-    public CandidateResponse updateCandidate(UUID id, CandidateRequest request) {
+    public CandidateResponse updateCandidate(Long id, CandidateRequest request) {
         Candidate candidate = findOrThrow(id);
 
         // Optimistic locking: @Version alone only compares with the row we just loaded,
@@ -97,7 +97,7 @@ public class CandidateService {
 
 
     @Transactional
-    public void deleteCandidate(UUID id) {
+    public void deleteCandidate(Long id) {
         if (!repository.existsById(id)) {
             throw new CandidateNotFoundException(id);
         }
@@ -106,7 +106,7 @@ public class CandidateService {
     }
 
 
-    private Candidate findOrThrow(UUID id) {
+    private Candidate findOrThrow(Long id) {
         return repository.findById(id).orElseThrow(() -> new CandidateNotFoundException(id));
     }
 }

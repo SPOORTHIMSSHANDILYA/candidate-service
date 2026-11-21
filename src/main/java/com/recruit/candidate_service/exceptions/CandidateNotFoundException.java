@@ -4,7 +4,7 @@ import java.util.UUID;
 
 public class CandidateNotFoundException extends RuntimeException {
 
-    public CandidateNotFoundException(UUID id) {
+    public CandidateNotFoundException(Long id) {
         super("Candidate not found: " + id);   // id only, safe to log
     }
 }
