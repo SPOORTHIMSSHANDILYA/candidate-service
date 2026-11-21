@@ -10,3 +10,6 @@
 ### DB configuration (written by me)
 - Wrote the datasource config in `application.yml` myself, without AI.
 
+Manual API testing
+- AI generated a Postman collection (55 requests) and a test tracker.
+- I tested all 55 cases manually in Postman; all pass.
