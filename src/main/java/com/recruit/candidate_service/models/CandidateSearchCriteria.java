@@ -1,5 +1,7 @@
 package com.recruit.candidate_service.models;
 
+import com.recruit.candidate_service.constants.CandidateStatus;
+import com.recruit.candidate_service.constants.SkillMatch;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -16,7 +18,7 @@ public record CandidateSearchCriteria
          @Email @Size(max = 254)
          String email,
 
-         /** Candidate must have ALL of these skills. Comma-separated in the URL: skills=java,aws */
+         /** Comma-separated skills; match mode is controlled by skillMatch. */
          @Size(max = 10)
          List<@Size(max = 50) String> skills,
 
@@ -32,6 +34,15 @@ public record CandidateSearchCriteria
          @Min(0) @Max(60)
          Integer maxExperience,
 
-         Boolean openToWork
+         Boolean openToWork,
+
+         /** Candidate may have any of these statuses. */
+         List<CandidateStatus> status,
+
+         @Min(0) @Max(365)
+         Integer maxNoticeDays,
+
+         /** ALL (default) requires every skill; ANY requires at least one. */
+         SkillMatch skillMatch
 
         ) { }

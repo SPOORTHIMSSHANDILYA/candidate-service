@@ -2,6 +2,7 @@ package com.recruit.candidate_service.utility;
 
 import com.recruit.candidate_service.entities.Candidate;
 import com.recruit.candidate_service.exceptions.BadRequestException;
+import com.recruit.candidate_service.exceptions.CandidateNotFoundException;
 import com.recruit.candidate_service.exceptions.DuplicateEmailException;
 import com.recruit.candidate_service.models.CandidateSearchCriteria;
 import com.recruit.candidate_service.repositories.CandidateRepository;
@@ -34,6 +35,10 @@ public class CandidateHelper {
         } catch (DataIntegrityViolationException e) {
             throw new DuplicateEmailException();
         }
+    }
+
+    public Candidate findOrThrow(Long id) {
+        return repository.findById(id).orElseThrow(() -> new CandidateNotFoundException(id));
     }
 
     public static String normalizeEmail(String email) {

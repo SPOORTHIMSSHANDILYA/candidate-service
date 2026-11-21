@@ -1,11 +1,17 @@
 package com.recruit.candidate_service.services;
 
 import com.recruit.candidate_service.entities.Candidate;
+import com.recruit.candidate_service.exceptions.BadRequestException;
 import com.recruit.candidate_service.exceptions.CandidateNotFoundException;
 import com.recruit.candidate_service.exceptions.DuplicateEmailException;
 import com.recruit.candidate_service.exceptions.VersionConflictException;
 import com.recruit.candidate_service.mapper.CandidateMapper;
-import com.recruit.candidate_service.models.*;
+import com.recruit.candidate_service.models.CandidateRequest;
+import com.recruit.candidate_service.models.CandidateResponse;
+import com.recruit.candidate_service.models.CandidateSearchCriteria;
+import com.recruit.candidate_service.models.CandidateStatusRequest;
+import com.recruit.candidate_service.models.CandidateSummary;
+import com.recruit.candidate_service.models.PageResponse;
 import com.recruit.candidate_service.repositories.CandidateRepository;
 import com.recruit.candidate_service.repositories.CandidateSpecifications;
 import com.recruit.candidate_service.utility.CandidateHelper;
@@ -15,9 +21,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.UUID;
-
-import static com.recruit.candidate_service.utility.CandidateHelper.*;
+import static com.recruit.candidate_service.utility.CandidateHelper.normalizeEmail;
+import static com.recruit.candidate_service.utility.CandidateHelper.normalizeSkills;
+import static com.recruit.candidate_service.utility.CandidateHelper.parseSort;
+import static com.recruit.candidate_service.utility.CandidateHelper.validateSearch;
 
 @Service
 @Slf4j
@@ -36,6 +43,7 @@ public class CandidateService {
     }
 
 
+    @Transactional(readOnly = true)
     public PageResponse<CandidateSummary> search(CandidateSearchCriteria criteria,
                                                  int page, int size, String sort) {
         validateSearch(criteria, page, size);
@@ -51,9 +59,9 @@ public class CandidateService {
         return PageResponse.from(result);
     }
 
-    public CandidateSummary getCandidateById(Long id) {
-        Candidate canddidate = repository.findById(id).orElseThrow(() -> new RuntimeException("Candidate not found"));
-        return mapper.toSummary(canddidate);
+    public CandidateResponse getCandidateById(Long id) {
+        Candidate candidate = helper.findOrThrow(id);
+        return mapper.toResponse(candidate);
     }
 
     @Transactional
@@ -68,16 +76,20 @@ public class CandidateService {
 
         candidate.replaceSkills(normalizeSkills(request.skills()));
         Candidate saved = helper.saveAndFlush(candidate);
+        log.info("Created candidate id={}", saved.getId());
         return mapper.toResponse(saved);
     }
 
     @Transactional
     public CandidateResponse updateCandidate(Long id, CandidateRequest request) {
-        Candidate candidate = findOrThrow(id);
+        Candidate candidate = helper.findOrThrow(id);
 
         // Optimistic locking: @Version alone only compares with the row we just loaded,
         // so a stale version from the client must be checked explicitly.
-        if (request.version() == null || !request.version().equals(candidate.getVersion())) {
+        if (request.version() == null) {
+            throw new BadRequestException("version is required");
+        }
+        if (!request.version().equals(candidate.getVersion())) {
             throw new VersionConflictException();
         }
 
@@ -101,12 +113,24 @@ public class CandidateService {
         if (!repository.existsById(id)) {
             throw new CandidateNotFoundException(id);
         }
-        repository.deleteById(id);                        // skills + applications removed too
+        repository.deleteById(id);                        // skills removed too
         log.info("Deleted candidate id={}", id);
     }
 
+    @Transactional
+    public CandidateResponse changeStatus(Long id, CandidateStatusRequest request) {
+        Candidate candidate = helper.findOrThrow(id);
 
-    private Candidate findOrThrow(Long id) {
-        return repository.findById(id).orElseThrow(() -> new CandidateNotFoundException(id));
+        if (request.version() == null) {
+            throw new BadRequestException("version is required");
+        }
+        if (!request.version().equals(candidate.getVersion())) {
+            throw new VersionConflictException();
+        }
+
+        candidate.setCandidateStatus(request.status());
+        Candidate saved = helper.saveAndFlush(candidate);
+        log.info("Updated candidate status id={} version={}", saved.getId(), saved.getVersion());
+        return mapper.toResponse(saved);
     }
 }

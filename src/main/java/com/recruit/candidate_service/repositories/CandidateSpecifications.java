@@ -1,5 +1,7 @@
 package com.recruit.candidate_service.repositories;
 
+import com.recruit.candidate_service.constants.CandidateStatus;
+import com.recruit.candidate_service.constants.SkillMatch;
 import com.recruit.candidate_service.entities.Candidate;
 import com.recruit.candidate_service.models.CandidateSearchCriteria;
 import jakarta.persistence.criteria.Expression;
@@ -19,22 +21,36 @@ public final class CandidateSpecifications {
         // utility class
     }
 
-    /** Combines every filter that has a value. No filters -> matches all candidates. */
+    /** Combines every filter that has a value. Archived candidates are excluded by default. */
     public static Specification<Candidate> matching(CandidateSearchCriteria c) {
         List<Specification<Candidate>> specs = new ArrayList<>();
 
         if (hasText(c.q()))            specs.add(matchesText(c.q()));
         if (hasText(c.email()))        specs.add(hasEmail(c.email()));
-        if (c.skills() != null)        c.skills().stream()
+        List<Specification<Candidate>> skillSpecs = c.skills() == null ? List.of() : c.skills().stream()
                 .filter(CandidateSpecifications::hasText)
                 .map(s -> s.trim().toLowerCase(Locale.ROOT))
                 .distinct()
-                .forEach(skill -> specs.add(hasSkill(skill)));
+                .map(CandidateSpecifications::hasSkill)
+                .toList();
+        if (!skillSpecs.isEmpty()) {
+            if (c.skillMatch() == SkillMatch.ANY) {
+                specs.add(Specification.anyOf(skillSpecs));
+            } else {
+                specs.addAll(skillSpecs);
+            }
+        }
         if (hasText(c.city()))         specs.add(hasCity(c.city()));
         if (hasText(c.country()))      specs.add(hasCountry(c.country()));
         if (c.minExperience() != null) specs.add(experienceAtLeast(c.minExperience()));
         if (c.maxExperience() != null) specs.add(experienceAtMost(c.maxExperience()));
         if (c.openToWork() != null)    specs.add(openToWork(c.openToWork()));
+        if (c.maxNoticeDays() != null) specs.add(noticePeriodAtMost(c.maxNoticeDays()));
+        if (c.status() == null || c.status().isEmpty()) {
+            specs.add(statusNotArchived());
+        } else {
+            specs.add(hasStatus(c.status()));
+        }
 
         return Specification.allOf(specs);
     }
@@ -90,6 +106,18 @@ public final class CandidateSpecifications {
         return (root, query, cb) -> cb.equal(root.get("openToWork"), value);
     }
 
+    static Specification<Candidate> hasStatus(List<CandidateStatus> statuses) {
+        return (root, query, cb) -> root.get("candidateStatus").in(statuses);
+    }
+
+    static Specification<Candidate> statusNotArchived() {
+        return (root, query, cb) -> cb.notEqual(root.get("candidateStatus"), CandidateStatus.ARCHIVED);
+    }
+
+    static Specification<Candidate> noticePeriodAtMost(int days) {
+        return (root, query, cb) -> cb.lessThanOrEqualTo(root.get("noticePeriodDays"), days);
+    }
+
     // ------------------------------------------------------------------ helpers
 
     private static boolean hasText(String s) {
@@ -101,4 +129,3 @@ public final class CandidateSpecifications {
         return s.replace("!", "!!").replace("%", "!%").replace("_", "!_");
     }
 }
-
