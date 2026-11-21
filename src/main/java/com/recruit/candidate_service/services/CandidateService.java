@@ -25,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.Map;
 
@@ -151,9 +152,15 @@ public class CandidateService {
             countsByStatus.put(count.getStatus(), count.getCount());
         }
 
+        long total = countsByStatus.values().stream().mapToLong(Long::longValue).sum();
+
         Instant now = Instant.now();
         long addedInLast7Days = repository.countByCreatedAtBetween(
                 now.minus(7, ChronoUnit.DAYS), now);
-        return new CandidateStats(Map.copyOf(countsByStatus), addedInLast7Days);
+        long openToWork = repository.countByOpenToWorkTrue();
+
+        // unmodifiableMap keeps the EnumMap order (ACTIVE, INACTIVE, ARCHIVED) in the JSON
+        return new CandidateStats(total, Collections.unmodifiableMap(countsByStatus),
+                addedInLast7Days, openToWork);
     }
 }

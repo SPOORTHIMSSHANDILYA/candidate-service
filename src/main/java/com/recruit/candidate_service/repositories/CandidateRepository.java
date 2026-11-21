@@ -26,6 +26,9 @@ public interface CandidateRepository extends JpaRepository<Candidate, Long> , Jp
 
     long countByCreatedAtBetween(Instant since, Instant until);
 
+    /** SELECT COUNT(*) ... WHERE open_to_work = TRUE */
+    long countByOpenToWorkTrue();
+
     @Query("select distinct s from Candidate c join c.skills s where s like :pattern escape '!' order by s")
     List<String> findSkills(@Param("pattern") String pattern, Pageable pageable);
 
