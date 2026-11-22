@@ -13,4 +13,29 @@ spring:
       ddl-auto: validate
     show-sql: false
   flyway:
-    enabled: false        # TEMPORARY: tables created manually in Workbench; enable before submission
+    enabled: true         # creates / upgrades the tables from db/migration on startup
+
+# Recruiters who can sign in. Passwords come from environment variables,
+# never from this file; they are BCrypt-hashed in memory when the app starts.
+app:
+  security:
+    recruiters:
+      - username: priya.n
+        display-name: Priya Nair
+        password: ${RECRUITER_PRIYA_PASSWORD}
+      - username: arjun.d
+        display-name: Arjun Desai
+        password: ${RECRUITER_ARJUN_PASSWORD}
+
+  # JWT returned by POST /api/v1/auth/login
+  jwt:
+    secret: ${JWT_SECRET}         # at least 32 characters, from an environment variable
+    expires-in: 8h                # one working day; then sign in again
+    issuer: candidate-service
+
+logging:
+  pattern:
+    # every line shows [request id] [user], e.g.  INFO [3f2a...] [priya.n] ...
+    level: "%5p [%X{requestId:-}] [%X{user:-}]"
+  level:
+    com.recruit.candidate_service: INFO
