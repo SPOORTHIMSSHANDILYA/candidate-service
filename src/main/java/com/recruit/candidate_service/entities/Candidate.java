@@ -3,6 +3,7 @@ package com.recruit.candidate_service.entities;
 import com.recruit.candidate_service.constants.CandidateStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -70,8 +71,13 @@ public class Candidate {
     @Column(name = "updated_by", length = 100)
     private String updatedBy;
 
-    /** Skills live in the candidate_skills table; loaded only when accessed. */
+    /**
+     * Skills live in the candidate_skills table; loaded only when accessed.
+     * @BatchSize avoids the N+1 problem on search: for a page of 20 candidates Hibernate loads
+     * all their skills in ONE query (WHERE candidate_id IN (...)) instead of 20 separate queries.
+     */
     @ElementCollection(fetch = FetchType.LAZY)
+    @BatchSize(size = 100)                           // = max page size
     @CollectionTable(name = "candidate_skills", joinColumns = @JoinColumn(name = "candidate_id"))
     @Column(name = "skill", nullable = false, length = 50)
     private Set<String> skills = new HashSet<>();
