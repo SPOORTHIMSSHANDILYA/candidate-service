@@ -1,0 +1,50 @@
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  background: #f5f6f8;
+}
+
+/* Clickable table rows */
+.clickable-row {
+  cursor: pointer;
+}
+
+/* Toolbar above the table (filters, views, columns) */
+.toolbar {
+  padding: 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+/* Footer under the table: "Showing 1–20 of 134" + page controls */
+.table-footer {
+  padding: 12px 16px;
+  border-top: 1px solid #f0f0f0;
+}
+
+/* Overview: one bar split by status */
+.status-bar {
+  display: flex;
+  height: 16px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #f0f0f0;
+}
+
+.status-bar-part {
+  height: 100%;
+  cursor: pointer;
+}
+
+.status-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  margin-right: 6px;
+  vertical-align: -1px;
+}
