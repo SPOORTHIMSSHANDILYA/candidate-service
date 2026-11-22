@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -19,6 +20,13 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(CandidateNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleNotFound(CandidateNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ErrorResponse.of("Candidate not found"));
+    }
+
+    // 401 - login with a wrong username or password (same message for both: don't reveal which usernames exist)
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ErrorResponse> handleLoginFailed(AuthenticationException ex) {
+        log.warn("Sign-in failed: {}", ex.getClass().getSimpleName());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ErrorResponse.of("Invalid username or password"));
     }
 
     // 400 - rule spanning several fields (min > max, bad sort field, page size, missing version)

@@ -16,6 +16,7 @@ import com.recruit.candidate_service.models.CandidateSummary;
 import com.recruit.candidate_service.models.PageResponse;
 import com.recruit.candidate_service.repositories.CandidateRepository;
 import com.recruit.candidate_service.repositories.CandidateSpecifications;
+import com.recruit.candidate_service.security.CurrentUser;
 import com.recruit.candidate_service.utility.CandidateHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -83,6 +84,9 @@ public class CandidateService {
         }
 
         candidate.replaceSkills(normalizeSkills(request.skills()));
+        String user = CurrentUser.username();          // audit: who created it
+        candidate.setCreatedBy(user);
+        candidate.setUpdatedBy(user);
         Candidate saved = helper.saveAndFlush(candidate);
         log.info("Created candidate id={}", saved.getId());
         return mapper.toResponse(saved);
@@ -109,6 +113,7 @@ public class CandidateService {
         mapper.updateEntity(request, candidate);
         candidate.setEmail(email);
         candidate.replaceSkills(normalizeSkills(request.skills()));
+        candidate.setUpdatedBy(CurrentUser.username());
 
         Candidate saved = helper.saveAndFlush(candidate); // flush -> new version + updatedAt in response
         log.info("Updated candidate id={} version={}", saved.getId(), saved.getVersion());
@@ -137,6 +142,7 @@ public class CandidateService {
         }
 
         candidate.setCandidateStatus(request.status());
+        candidate.setUpdatedBy(CurrentUser.username());
         Candidate saved = helper.saveAndFlush(candidate);
         log.info("Updated candidate status id={} version={}", saved.getId(), saved.getVersion());
         return mapper.toResponse(saved);
